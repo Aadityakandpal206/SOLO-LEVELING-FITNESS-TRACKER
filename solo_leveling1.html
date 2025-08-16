@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solo Leveling - Fitness Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #2d2d5f 100%);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100vh;
+        }
+
+        .orbitron {
+            font-family: 'Orbitron', monospace;
+        }
+
+        .rank-badge {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #000;
+            font-weight: bold;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            text-shadow: none;
+        }
+
+        .rank-e { background: linear-gradient(45deg, #8b4513, #cd853f); }
+        .rank-d { background: linear-gradient(45deg, #696969, #a9a9a9); }
+        .rank-c { background: linear-gradient(45deg, #cd7f32, #daa520); }
+        .rank-b { background: linear-gradient(45deg, #c0c0c0, #e5e5e5); }
+        .rank-a { background: linear-gradient(45deg, #ffd700, #ffed4e); }
+        .rank-s { background: linear-gradient(45deg, #ff6b6b, #ff8e8e); }
+
+        .exp-bar {
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+            position: relative;
+        }
+
+        .exp-fill {
+            background: linear-gradient(90deg, #00d4ff, #00a8cc);
+            height: 100%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid #00d4ff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .profile-avatar:hover {
+            border-color: #ffd700;
+            transform: scale(1.05);
+        }
+
+        .exercise-card {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            border: 2px solid #4a5568;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .exercise-card:hover {
+            border-color: #00d4ff;
+            transform: translateY(-2px);
+        }
+
+        .exercise-card.completed {
+            border-color: #48bb78;
+            background: linear-gradient(135deg, #2f855a 0%, #38a169 100%);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(229, 62, 62, 0.4);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .profile-option {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid #4a5568;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .profile-option:hover {
+            border-color: #00d4ff;
+            transform: scale(1.1);
+        }
+
+        .profile-option.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
+
+        .profile-option.selected {
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .history-item {
+            background: #2d3748;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #00d4ff;
+        }
+
+        .history-item.completed {
+            border-left-color: #48bb78;
+        }
+
+        .history-item.failed {
+            border-left-color: #e53e3e;
+        }
+
+        .tab-button {
+            background: transparent;
+            border: 2px solid #4a5568;
+            color: #a0aec0;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+
+        .tab-button.active {
+            border-color: #00d4ff;
+            color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .checkbox-custom {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #4a5568;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-custom:checked {
+            background: #48bb78;
+            border-color: #48bb78;
+        }
+
+        .checkbox-custom:checked::after {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="bg-gray-900 shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="orbitron text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">
+                    SOLO LEVELING
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <div class="profile-avatar" onclick="openProfileModal()">
+                        <span id="profileDisplay">👤</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="flex items-center space-x-2">
+                            <span id="playerName" class="font-bold">Hunter</span>
+                            <span id="rankBadge" class="rank-badge rank-e">E</span>
+                        </div>
+                        <div class="text-sm text-gray-300">
+                            EXP: <span id="currentExp">0</span>/<span id="maxExp">100</span>
+                        </div>
+                        <div class="exp-bar w-32 mt-1">
+                            <div id="expFill" class="exp-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="container mx-auto px-6 py-4">
+        <div class="flex justify-center space-x-4">
+            <button class="tab-button active" onclick="switchTab('dashboard')">Dashboard</button>
+            <button class="tab-button" onclick="switchTab('exercises')">Exercises</button>
+            <button class="tab-button" onclick="switchTab('history')">History</button>
+            <button class="tab-button" onclick="switchTab('profile')">Profile</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 pb-8">
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="text-center mb-8">
+                <h2 class="orbitron text-2xl font-bold mb-4">Today's Training</h2>
+                <div class="bg-gray-800 rounded-lg p-6 inline-block">
+                    <div class="text-4xl font-bold text-blue-400 mb-2" id="todayProgress">0/0</div>
+                    <div class="text-gray-300">Exercises Completed</div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="todayExercises">
+                <!-- Today's exercises will be populated here -->
+            </div>
+
+            <div class="text-center mt-8">
+                <button class="btn-primary" onclick="switchTab('exercises')">
+                    Add New Exercise
+                </button>
+                <button class="btn-danger ml-4" onclick="resetAllData()">
+                    Reset All Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Exercises Tab -->
+        <div id="exercises" class="tab-content">
+            <div class="max-w-2xl mx-auto">
+                <h2 class="orbitron text-2xl font-bold mb-6 text-center">Exercise Management</h2>
+                
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-4">Add New Exercise</h3>
+                    <form id="exerciseForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold mb-2">Exercise Name</label>
+                            <input type="text" id="exerciseName" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 text-white" required>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold mb-2">Sets</label>
+                                <input type="number" id="exerciseSets" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 text-white" min="1" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold mb-2">Reps</label>
+                                <input type="number" id="exerciseReps" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 text-white" min="1" required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold mb-2">Schedule Type</label>
+                            <select id="scheduleType" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 text-white">
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+
+                        <div id="weeklyDays" class="space-y-2">
+                            <label class="block text-sm font-bold mb-2">Days of Week</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" value="0" class="checkbox-custom">
+                                    <span>Sunday</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" value="1" class="checkbox-custom">
+                                    <span>Monday</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" value="2" class="checkbox-custom">
+                                    <span>Tuesday</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" value="3" class="checkbox-custom">
+                                    <span>Wednesday</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" value="4" class="checkbox-custom">
+                                    <span>Thursday</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" value="5" class="checkbox-custom">
+                                    <span>Friday</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" value="6" class="checkbox-custom">
+                                    <span>Saturday</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="monthlyDays" class="space-y-2" style="display: none;">
+                            <label class="block text-sm font-bold mb-2">Days of Month (comma separated, e.g., 1,15,30)</label>
+                            <input type="text" id="monthlyDaysInput" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 text-white" placeholder="1,15,30">
+                        </div>
+
+                        <button type="submit" class="btn-primary w-full">Add Exercise</button>
+                    </form>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-xl font-bold mb-4">Your Exercises</h3>
+                    <div id="exercisesList">
+                        <!-- Exercises list will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="history" class="tab-content">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="orbitron text-2xl font-bold mb-6 text-center">Training History</h2>
+                <div id="historyList">
+                    <!-- History items will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Tab -->
+        <div id="profile" class="tab-content">
+            <div class="max-w-2xl mx-auto">
+                <h2 class="orbitron text-2xl font-bold mb-6 text-center">Hunter Profile</h2>
+                
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold mb-4">Profile Settings</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold mb-2">Hunter Name</label>
+                            <input type="text" id="nameInput" class="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 text-white" placeholder="Enter your name">
+                            <button onclick="updateName()" class="btn-primary mt-2">Update Name</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg p-6">
+                    <h3 class="text-xl font-bold mb-4">Avatar Selection</h3>
+                    <div class="profile-grid" id="profileGrid">
+                        <!-- Profile options will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Select Avatar</h3>
+                <button onclick="closeProfileModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div class="profile-grid" id="modalProfileGrid">
+                <!-- Profile options will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Game Data
+        let gameData = {
+            playerName: 'Hunter',
+            exp: 0,
+            rank: 'E',
+            level: 1,
+            selectedProfile: '👤',
+            exercises: [],
+            history: [],
+            completedToday: {}
+        };
+
+        // Rank system
+        const ranks = ['E', 'D', 'C', 'B', 'A', 'S'];
+        const expRequired = { E: 100, D: 250, C: 500, B: 1000, A: 2000, S: 5000 };
+        const expReward = 50;
+        const expPenalty = 25;
+
+        // Profile avatars
+        const profileAvatars = [
+            { emoji: '👤', rank: 'E', name: 'Default' },
+            { emoji: '🥷', rank: 'E', name: 'Ninja' },
+            { emoji: '🦸', rank: 'D', name: 'Hero' },
+            { emoji: '🧙', rank: 'D', name: 'Wizard' },
+            { emoji: '⚡', rank: 'C', name: 'Lightning' },
+            { emoji: '🔥', rank: 'C', name: 'Fire' },
+            { emoji: '❄️', rank: 'B', name: 'Ice' },
+            { emoji: '🌟', rank: 'B', name: 'Star' },
+            { emoji: '💎', rank: 'A', name: 'Diamond' },
+            { emoji: '👑', rank: 'A', name: 'King' },
+            { emoji: '🏆', rank: 'S', name: 'Champion' },
+            { emoji: '⚔️', rank: 'S', name: 'Legendary' }
+        ];
+
+        // Initialize the app
+        function init() {
+            loadData();
+            updateDisplay();
+            updateTodayExercises();
+            updateExercisesList();
+            updateHistory();
+            updateProfileGrid();
+            setupEventListeners();
+        }
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('soloLevelingData');
+            if (saved) {
+                gameData = { ...gameData, ...JSON.parse(saved) };
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('soloLevelingData', JSON.stringify(gameData));
+        }
+
+        // Update display elements
+        function updateDisplay() {
+            document.getElementById('playerName').textContent = gameData.playerName;
+            document.getElementById('profileDisplay').textContent = gameData.selectedProfile;
+            document.getElementById('currentExp').textContent = gameData.exp;
+            document.getElementById('maxExp').textContent = expRequired[gameData.rank];
+            document.getElementById('rankBadge').textContent = gameData.rank;
+            document.getElementById('rankBadge').className = `rank-badge rank-${gameData.rank.toLowerCase()}`;
+            
+            const expPercent = (gameData.exp / expRequired[gameData.rank]) * 100;
+            document.getElementById('expFill').style.width = `${Math.min(expPercent, 100)}%`;
+        }
+
+        // Check for rank up
+        function checkRankUp() {
+            const currentRankIndex = ranks.indexOf(gameData.rank);
+            if (gameData.exp >= expRequired[gameData.rank] && currentRankIndex < ranks.length - 1) {
+                gameData.rank = ranks[currentRankIndex + 1];
+                gameData.exp = 0;
+                showNotification(`Congratulations! You've reached ${gameData.rank} rank!`, 'success');
+                updateProfileGrid();
+            }
+        }
+
+        // Check for rank down
+        function checkRankDown() {
+            const currentRankIndex = ranks.indexOf(gameData.rank);
+            if (gameData.exp < 0 && currentRankIndex > 0) {
+                gameData.rank = ranks[currentRankIndex - 1];
+                gameData.exp = expRequired[gameData.rank] - Math.abs(gameData.exp);
+                showNotification(`You've been demoted to ${gameData.rank} rank!`, 'error');
+                updateProfileGrid();
+            } else if (gameData.exp < 0) {
+                gameData.exp = 0;
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Switch tabs
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Add exercise
+        function addExercise() {
+            const form = document.getElementById('exerciseForm');
+            const formData = new FormData(form);
+            
+            const name = document.getElementById('exerciseName').value;
+            const sets = parseInt(document.getElementById('exerciseSets').value);
+            const reps = parseInt(document.getElementById('exerciseReps').value);
+            const scheduleType = document.getElementById('scheduleType').value;
+            
+            let schedule = [];
+            
+            if (scheduleType === 'weekly') {
+                const checkboxes = document.querySelectorAll('#weeklyDays input[type="checkbox"]:checked');
+                schedule = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            } else {
+                const monthlyInput = document.getElementById('monthlyDaysInput').value;
+                schedule = monthlyInput.split(',').map(day => parseInt(day.trim())).filter(day => !isNaN(day));
+            }
+            
+            if (schedule.length === 0) {
+                showNotification('Please select at least one day!', 'error');
+                return;
+            }
+            
+            const exercise = {
+                id: Date.now(),
+                name,
+                sets,
+                reps,
+                scheduleType,
+                schedule,
+                createdAt: new Date().toISOString()
+            };
+            
+            gameData.exercises.push(exercise);
+            saveData();
+            updateExercisesList();
+            updateTodayExercises();
+            form.reset();
+            showNotification('Exercise added successfully!', 'success');
+        }
+
+        // Delete exercise
+        function deleteExercise(id) {
+            if (confirm('Are you sure you want to delete this exercise?')) {
+                gameData.exercises = gameData.exercises.filter(ex => ex.id !== id);
+                saveData();
+                updateExercisesList();
+                updateTodayExercises();
+                showNotification('Exercise deleted!', 'success');
+            }
+        }
+
+        // Update exercises list
+        function updateExercisesList() {
+            const container = document.getElementById('exercisesList');
+            
+            if (gameData.exercises.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-center">No exercises added yet.</p>';
+                return;
+            }
+            
+            container.innerHTML = gameData.exercises.map(exercise => `
+                <div class="exercise-card">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-lg">${exercise.name}</h4>
+                            <p class="text-gray-300">${exercise.sets} sets × ${exercise.reps} reps</p>
+                            <p class="text-sm text-gray-400">
+                                ${exercise.scheduleType === 'weekly' 
+                                    ? `Weekly: ${exercise.schedule.map(d => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(', ')}`
+                                    : `Monthly: Days ${exercise.schedule.join(', ')}`
+                                }
+                            </p>
+                        </div>
+                        <button onclick="deleteExercise(${exercise.id})" class="btn-danger">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get today's exercises
+        function getTodayExercises() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const dayOfMonth = today.getDate();
+            
+            return gameData.exercises.filter(exercise => {
+                if (exercise.scheduleType === 'weekly') {
+                    return exercise.schedule.includes(dayOfWeek);
+                } else {
+                    return exercise.schedule.includes(dayOfMonth);
+                }
+            });
+        }
+
+        // Update today's exercises
+        function updateTodayExercises() {
+            const todayExercises = getTodayExercises();
+            const container = document.getElementById('todayExercises');
+            const today = new Date().toDateString();
+            
+            const completedCount = todayExercises.filter(ex => gameData.completedToday[`${today}-${ex.id}`]).length;
+            document.getElementById('todayProgress').textContent = `${completedCount}/${todayExercises.length}`;
+            
+            if (todayExercises.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-400">No exercises scheduled for today.</div>';
+                return;
+            }
+            
+            container.innerHTML = todayExercises.map(exercise => {
+                const isCompleted = gameData.completedToday[`${today}-${exercise.id}`];
+                return `
+                    <div class="exercise-card ${isCompleted ? 'completed' : ''}">
+                        <h4 class="font-bold text-lg mb-2">${exercise.name}</h4>
+                        <p class="text-gray-300 mb-4">${exercise.sets} sets × ${exercise.reps} reps</p>
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" 
+                                       class="checkbox-custom" 
+                                       ${isCompleted ? 'checked' : ''}
+                                       onchange="toggleExerciseCompletion(${exercise.id})">
+                                <span>Completed</span>
+                            </label>
+                            <span class="text-sm ${isCompleted ? 'text-green-400' : 'text-gray-400'}">
+                                ${isCompleted ? '+' + expReward + ' EXP' : 'Incomplete'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle exercise completion
+        function toggleExerciseCompletion(exerciseId) {
+            const today = new Date().toDateString();
+            const key = `${today}-${exerciseId}`;
+            const wasCompleted = gameData.completedToday[key];
+            
+            if (wasCompleted) {
+                // Uncomplete - remove EXP
+                delete gameData.completedToday[key];
+                gameData.exp -= expReward;
+                showNotification(`Exercise uncompleted! -${expReward} EXP`, 'error');
+            } else {
+                // Complete - add EXP
+                gameData.completedToday[key] = true;
+                gameData.exp += expReward;
+                showNotification(`Exercise completed! +${expReward} EXP`, 'success');
+            }
+            
+            // Add to history
+            const exercise = gameData.exercises.find(ex => ex.id === exerciseId);
+            const historyItem = {
+                id: Date.now(),
+                exerciseName: exercise.name,
+                completed: !wasCompleted,
+                date: today,
+                exp: wasCompleted ? -expReward : expReward
+            };
+            
+            gameData.history.unshift(historyItem);
+            
+            checkRankUp();
+            checkRankDown();
+            saveData();
+            updateDisplay();
+            updateTodayExercises();
+            updateHistory();
+        }
+
+        // Update history
+        function updateHistory() {
+            const container = document.getElementById('historyList');
+            
+            if (gameData.history.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-center">No training history yet.</p>';
+                return;
+            }
+            
+            // Group history by date
+            const groupedHistory = gameData.history.reduce((groups, item) => {
+                const date = item.date;
+                if (!groups[date]) {
+                    groups[date] = [];
+                }
+                groups[date].push(item);
+                return groups;
+            }, {});
+            
+            container.innerHTML = Object.entries(groupedHistory).map(([date, items]) => `
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold mb-3 text-blue-400">${date}</h3>
+                    ${items.map(item => `
+                        <div class="history-item ${item.completed ? 'completed' : 'failed'}">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h4 class="font-bold">${item.exerciseName}</h4>
+                                    <p class="text-sm text-gray-300">
+                                        ${item.completed ? 'Completed' : 'Uncompleted'}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-lg font-bold ${item.exp > 0 ? 'text-green-400' : 'text-red-400'}">
+                                        ${item.exp > 0 ? '+' : ''}${item.exp} EXP
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+
+        // Update profile grid
+        function updateProfileGrid() {
+            const currentRankIndex = ranks.indexOf(gameData.rank);
+            const availableAvatars = profileAvatars.filter(avatar => 
+                ranks.indexOf(avatar.rank) <= currentRankIndex
+            );
+            
+            const grids = [document.getElementById('profileGrid'), document.getElementById('modalProfileGrid')];
+            
+            grids.forEach(grid => {
+                if (grid) {
+                    grid.innerHTML = profileAvatars.map(avatar => {
+                        const isUnlocked = ranks.indexOf(avatar.rank) <= currentRankIndex;
+                        const isSelected = avatar.emoji === gameData.selectedProfile;
+                        
+                        return `
+                            <div class="profile-option ${!isUnlocked ? 'locked' : ''} ${isSelected ? 'selected' : ''}"
+                                 onclick="${isUnlocked ? `selectProfile('${avatar.emoji}')` : ''}"
+                                 title="${avatar.name} (${avatar.rank} Rank ${!isUnlocked ? '- Locked' : ''})">
+                                ${avatar.emoji}
+                            </div>
+                        `;
+                    }).join('');
+                }
+            });
+        }
+
+        // Select profile
+        function selectProfile(emoji) {
+            gameData.selectedProfile = emoji;
+            saveData();
+            updateDisplay();
+            updateProfileGrid();
+            closeProfileModal();
+            showNotification('Avatar changed!', 'success');
+        }
+
+        // Update name
+        function updateName() {
+            const nameInput = document.getElementById('nameInput');
+            const newName = nameInput.value.trim();
+            
+            if (newName && newName !== gameData.playerName) {
+                gameData.playerName = newName;
+                saveData();
+                updateDisplay();
+                nameInput.value = '';
+                showNotification('Name updated!', 'success');
+            }
+        }
+
+        // Modal functions
+        function openProfileModal() {
+            document.getElementById('profileModal').classList.add('active');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.remove('active');
+        }
+
+        // Reset all data
+        function resetAllData() {
+            if (confirm('Are you sure you want to reset all data? This cannot be undone!')) {
+                localStorage.removeItem('soloLevelingData');
+                gameData = {
+                    playerName: 'Hunter',
+                    exp: 0,
+                    rank: 'E',
+                    level: 1,
+                    selectedProfile: '👤',
+                    exercises: [],
+                    history: [],
+                    completedToday: {}
+                };
+                updateDisplay();
+                updateTodayExercises();
+                updateExercisesList();
+                updateHistory();
+                updateProfileGrid();
+                showNotification('All data has been reset!', 'success');
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Exercise form
+            document.getElementById('exerciseForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addExercise();
+            });
+            
+            // Schedule type change
+            document.getElementById('scheduleType').addEventListener('change', function() {
+                const weeklyDays = document.getElementById('weeklyDays');
+                const monthlyDays = document.getElementById('monthlyDays');
+                
+                if (this.value === 'weekly') {
+                    weeklyDays.style.display = 'block';
+                    monthlyDays.style.display = 'none';
+                } else {
+                    weeklyDays.style.display = 'none';
+                    monthlyDays.style.display = 'block';
+                }
+            });
+            
+            // Close modal when clicking outside
+            document.getElementById('profileModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeProfileModal();
+                }
+            });
+            
+            // Name input enter key
+            document.getElementById('nameInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    updateName();
+                }
+            });
+        }
+
+        // Daily reset check
+        function checkDailyReset() {
+            const lastCheck = localStorage.getItem('lastDailyCheck');
+            const today = new Date().toDateString();
+            
+            if (lastCheck !== today) {
+                // Check if yesterday's exercises were incomplete
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayString = yesterday.toDateString();
+                
+                const yesterdayExercises = gameData.exercises.filter(exercise => {
+                    if (exercise.scheduleType === 'weekly') {
+                        return exercise.schedule.includes(yesterday.getDay());
+                    } else {
+                        return exercise.schedule.includes(yesterday.getDate());
+                    }
+                });
+                
+                const completedYesterday = yesterdayExercises.filter(ex => 
+                    gameData.completedToday[`${yesterdayString}-${ex.id}`]
+                ).length;
+                
+                if (yesterdayExercises.length > 0 && completedYesterday < yesterdayExercises.length) {
+                    const missedExercises = yesterdayExercises.length - completedYesterday;
+                    gameData.exp -= expPenalty * missedExercises;
+                    checkRankDown();
+                    saveData();
+                    showNotification(`You missed ${missedExercises} exercises yesterday! -${expPenalty * missedExercises} EXP`, 'error');
+                }
+                
+                localStorage.setItem('lastDailyCheck', today);
+            }
+        }
+
+        // Initialize app when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+            checkDailyReset();
+        });
+    </script>
+</body>
+</html>
+
